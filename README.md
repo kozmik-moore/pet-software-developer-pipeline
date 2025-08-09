@@ -21,7 +21,7 @@
 
 ## Overview
 
-This project performs cleaning and analysis on datasets of animal activity, animal health, and owner information for a software developer using the Python. The goal merge the datasets into a single dataset usable by the development team and provide some basic insights from their data.
+This project performs cleaning and analysis using Python. This is done on three datasets supplied by a software developer: animal activity, animal health, and owner information. The goal is to merge the datasets into a single dataset usable by the development team and provide some basic insights from their data.
 
 This is a portfolio project created to demonstrate my proficiency in data cleaning, analysis, and visualization, as well as creating functions to support that workflow using Python. It highlights my ability to work with real-world datasets, derive meaningful insights, and communicate results clearly through code and visualizations.
 
