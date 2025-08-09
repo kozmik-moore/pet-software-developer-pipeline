@@ -120,7 +120,7 @@ def clean_data(df: pd.DataFrame):
     # Change "owner_age_group" datatype to "category" and assign NaN, if missing
     if 'owner_age_group' in tdf.columns:
         tdf.loc[tdf.owner_age_group.isna(), 'owner_age_group'] = np.nan
-        # tdf.owner_age_group = tdf.owner_age_group.astype('category')
+        tdf.owner_age_group = tdf.owner_age_group.astype('category')
 
     # Change "pet_type" datatype to "category" and assign NaN, if missing
     if 'pet_type' in tdf.columns:
