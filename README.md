@@ -1,9 +1,7 @@
-[*This is a template directory for a basic data analysis project, free for you to use.\
-If you do use it, be sure to thoroughly inspect and update this README, the [LICENSE](./LICENSE), and the content in the [notebook](./code/notebook.ipynb) to make it your own.*]
 <!-- omit from toc -->
-# Project: [*the project's name*]
+# Project: Creating a Data Pipeline for HappyPaws
 
-*A short description for this project.*
+*A DataCamp project*
 
 <!-- omit from toc -->
 ## Table of Contents
@@ -23,22 +21,27 @@ If you do use it, be sure to thoroughly inspect and update this README, the [LIC
 
 ## Overview
 
-This project performs exploratory data analysis on a dataset of animal shelter intakes and outcomes using the Python libraries `pandas` and `seaborn`. The goal is to uncover trends, detect anomalies, and visualize key insights to support data-driven decision-making for...
+This project performs cleaning and analysis on datasets of animal activity, animal health, and owner information for a software developer using the Python. The goal merge the datasets into a single dataset usable by the development team and provide some basic insights from their data.
 
-This is a portfolio project created to demonstrate proficiency in data analysis, data cleaning, and data visualization using Python. It highlights my ability to work with real-world datasets, derive meaningful insights, and communicate results clearly through code and visualizations.
+This is a portfolio project created to demonstrate my proficiency in data cleaning, analysis, and visualization, as well as creating functions to support that workflow using Python. It highlights my ability to work with real-world datasets, derive meaningful insights, and communicate results clearly through code and visualizations.
 
 ## Project Structure
 
 ```
-└── 📁basic-data-analysis-template
+└── 📁data-engineer-practical
     └── 📁assets
+        ├── image.png
     └── 📁code
         └── 📁utilities
             ├── __init__.py
             ├── config.py
+            ├── processes.py
         ├── notebook.ipynb
     └── 📁data
-        ├── raw_data.csv
+        ├── cleaned.csv
+        ├── pet_activities.csv
+        ├── pet_health.csv
+        ├── users.csv
     └── 📁products
         └── 📁images
         ├── report.md
@@ -50,9 +53,9 @@ This is a portfolio project created to demonstrate proficiency in data analysis,
 
 ## Data Source(s)
 
-- **File**: [`raw_data.csv`](./data/raw_data.csv)
-- **Source**: [Some data](https://add-your-data-source.com)
-- **Description**: Contains some data.
+- **File(s)**: [`pet_activities.csv`](./data/pet_activities.csv), [`pet_health.csv`](./data/pet_health.csv), [`users.csv`](./data/users.csv)
+- **Source**: DataCamp
+- **Description**: Data on pet activities, pet health, and pet owners.
 
 ## Installation
 
@@ -74,8 +77,8 @@ pip install -r requirements.txt
 Clone the repository and install required packages:
 
 ```bash
-git clone https://github.com/kozmik-moore/basic-data-analysis-template.git
-cd lb-animal-shelter-intakes-outcomes
+git clone https://github.com/kozmik-moore/pet-software-developer-pipeline.git
+cd pet-software-developer-pipeline
 pip install -r requirements.txt
 ```
 
