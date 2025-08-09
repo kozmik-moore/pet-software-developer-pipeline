@@ -1,4 +1,5 @@
 from pathlib import Path
+from os.path import exists
 
 def get_path_obj(*nodes: Path|str):
     return Path(*nodes)
@@ -6,35 +7,36 @@ def get_path_obj(*nodes: Path|str):
 class Directories:
     """A class for easily accessing and managing directory information
     """
-    def __init__(self, name) -> None:
-        self._name = name
-        self._root = Path('..')
-        self._location = self._root
-
-    @property
-    def name(self):
-        return self._name
+    def __init__(self, root: str|Path = Path('.'), project_root: str|Path = Path('.')) -> None:
+        self._root = Path(root) if isinstance(root, str) else root
+        self._project_root = Path(project_root) if isinstance(project_root, str) else project_root
 
     @property
     def root(self):
-        """Returns a path representation of the project root
+        """Returns the `Path` object pointing to this instance's root
 
         Returns:
-            pathlib.Path: a Path object pointing to the root of the project directory
+            pathlib.Path: a Path object
         """
         return self._root
-    
+
     @property
-    def path(self):
-        """Returns a path representation of the object root
+    def top(self):
+        """Returns the `Path` object pointing to the project's root'
 
         Returns:
-            pathlib.Path: a Path object pointing to the root of the object
+            pathlib.Path: a Path object
         """
-        return self._location
+        return self._project_root
     
-    def __str__(self) -> str:
-        return str(self._location)
+    @property
+    def exists(self):
+        """Checks whether the instance root exists
+
+        Returns:
+            bool: `True` if the instance root exists
+        """
+        return exists(self._root)
 
     def add_path(self, name: str,  *nodes: str|Path):
         """Add an attribute representing a path
@@ -48,30 +50,53 @@ class Directories:
         if name in dir(self):
             raise ValueError(f'Directories object already has an attribute "{name}"')
         setattr(self, name, get_path_obj(*nodes))
+    
+    def __str__(self) -> str:
+        return str(self._root)
+    
+    def __truediv__(self, other) -> Path:
+        if isinstance(other, (Path)) or isinstance(other, str):
+            return self._root / other
+        else:
+            return NotImplemented
+        
+class Root(Directories):
+    """A `Directories` created specifically for use in this project structure. Assumes that the project root is one level up
+    """
+    def __init__(self, root = Path('..'), project_root = Path('..')) -> None:
+        super().__init__(root, project_root)
 
-class Data(Directories):
-    def __init__(self, name: str = 'data') -> None:
-        super().__init__(name)
-        self._location = self._root / 'data'
-        self.activities = self._location / 'pet_activities.csv'
-        self.health = self._location / 'pet_health.csv'
-        self.users = self._location / 'users.csv'
+class Data(Root):
+    """A `Directories` referencing the `data` directory, found one level up
+    """
+    def __init__(self, root = Path('../data')) -> None:
+        super().__init__(root)
+        self.activities = self / 'pet_activities.csv'
+        self.health = self / 'pet_health.csv'
+        self.users = self / 'users.csv'
 
-class Assets(Directories):
-    def __init__(self, name: str = 'assets') -> None:
-        super().__init__(name)
-        self._location = self._root / 'assets'
+class Assets(Root):
+    """A `Directories` referencing the `assets` directory, found one level up
+    """
+    def __init__(self, root = Path('../assets')) -> None:
+        super().__init__(root)
 
-class Code(Directories):
-    def __init__(self, name: str = 'code') -> None:
-        super().__init__(name)
-        self._location = self._root / 'code'
+class Code(Root):
+    """A `Directories` referencing the `code` directory, found one level up
+    """
+    def __init__(self, root = Path('../code')) -> None:
+        super().__init__(root)
 
-class Products(Directories):
-    def __init__(self, name: str = 'products') -> None:
-        super().__init__(name)
-        self._location = self._root / 'products'
-        self.images = self._location / 'images'
+class Products(Root):
+    """A `Directories` referencing the `products` directory, found one level up
+    """
+    def __init__(self, root = Path('../products')) -> None:
+        super().__init__(root)
+        self._images = self / 'images'
+
+    @property
+    def images(self):
+        return self._images
 
 data = Data()
 assets = Assets()
