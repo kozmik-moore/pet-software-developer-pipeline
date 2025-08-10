@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from pathlib import Path
+from utilities.config import data
 
 def load_dbs(*filenames: str|Path):
     """Takes supplied filenames and returns a list of dataframes \
@@ -157,19 +158,22 @@ def sort_data(df: pd.DataFrame):
     return sorted_df
 
 
-def all_pet_data(activities: str|Path, health: str|Path, users: str|Path, sort: bool = False):
+def all_pet_data(**kwargs):
     """Merges and cleans data from the "pet activities", "pet health", and "users" databases
 
     Args:
-        activities (str): the "activities" CSV file
-        health (str): the "health" CSV file
-        users (str): the "users" CSV file
-        merge (str): the type of merge to be performed between any database and "users". Defaults to 'left'.
+        activities (str | Path): the "activities" CSV file
+        health (str | Path): the "health" CSV file
+        users (str | Path): the "users" CSV file
         sort (bool): whether to sort rows and columns of the resulting dataframe. Defaults to False.
 
     Returns:
         pandas.DataFrame: a DataFrame of cleaned and merged databases
     """
+    activities = kwargs.get('activities', data.activities)
+    health = kwargs.get('health', data.health)
+    users = kwargs.get('users', data.users)
+    sort = kwargs.get('sort', False)
     df_list = load_dbs(activities, health, users)   # Load
     merge_df = merge_dbs(*df_list)                  # Merge
     clean_df = clean_data(merge_df)                 # Clean

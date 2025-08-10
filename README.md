@@ -28,7 +28,7 @@ This is a portfolio project created to demonstrate my proficiency in data cleani
 ## Project Structure
 
 ```
-└── 📁data-engineer-practical
+└── 📁pet-software-developer-pipeline
     └── 📁assets
         ├── image.png
     └── 📁code
@@ -36,6 +36,7 @@ This is a portfolio project created to demonstrate my proficiency in data cleani
             ├── __init__.py
             ├── config.py
             ├── processes.py
+            ├── visuals.py
         ├── notebook.ipynb
     └── 📁data
         ├── cleaned.csv
@@ -44,6 +45,12 @@ This is a portfolio project created to demonstrate my proficiency in data cleani
         ├── users.csv
     └── 📁products
         └── 📁images
+            ├── Activity counts (non-health).jpg
+            ├── Distibution of health visits by pet type.jpg
+            ├── Distibution of health visits for all pet types.jpg
+            ├── Pet counts by owner age group.jpg
+            ├── Pet proportions by owner age group.jpg
+            ├── Unique pet counts.jpg
         ├── report.md
     ├── .gitignore
     ├── LICENSE
