@@ -198,3 +198,88 @@ def pet_counts_by_owner_age(data: pd.DataFrame, proportions: bool = False, save:
 
     if return_df:
         return counts_df
+    
+
+def activities_heatmaps(
+        df: pd.DataFrame, 
+        category: str = 'owners', 
+        save: bool = False, 
+        palette: str|None = None, 
+        reset_palette: bool = True, 
+        return_df: bool = False):
+    
+    # Store palette and change to desired palette
+    if palette:
+        if reset_palette:
+            orig_pal = sns.color_palette()
+        sns.set_palette(palette)
+
+    # Determine which category to analyze: pet types or owner ages
+    c_type = {
+        'owners': 'owner_age_group',
+        'pets': 'pet_type'
+    }[category]
+
+    # Sort data by year and month
+    a_df = df.loc[df.activity_type != 'Health', ['date', c_type, 'activity_type']].copy()
+    a_df.activity_type = a_df.activity_type.cat.remove_unused_categories()
+    a_df['month'] = a_df.date.dt.month
+    a_df['year'] = a_df.date.dt.year
+
+    # Get average monthly activity counts
+    g_df = a_df.groupby(['year', 'month', c_type], observed=True).activity_type.value_counts().reset_index(name='counts')
+    ag_df = g_df.loc[(g_df.year == 2023) | (g_df.month > 3)].groupby([c_type, 'activity_type'], observed=True).counts.agg('mean').reset_index(name='means')
+
+    # Prepare for visualization and create heatmap
+    title = f'Average monthly activity counts by {c_type.replace("_", " ")}'
+    pag_df = ag_df.pivot(index=c_type, columns='activity_type', values='means')
+    ax = sns.heatmap(pag_df);
+    ax.set_xlabel('')
+    ax.set_ylabel('')
+    plt.suptitle(title)
+    # plt.show()
+
+    # Reset palette
+    if palette and reset_palette:
+        sns.set_palette(orig_pal)
+
+    if save:
+        _save_figure(title)
+    
+    if return_df:
+        return ag_df
+    
+
+def activities_heatmaps_owners_pets(df: pd.DataFrame, save: bool = False, palette: str|None = None, reset_palette: bool = True, return_df: bool = False):
+    if palette:
+        if reset_palette:
+            orig_pal = sns.color_palette()
+        sns.set_palette(palette)
+    a_df = df.loc[df.activity_type != 'Health', ['date', 'owner_age_group', 'pet_type', 'activity_type']].copy()
+    a_df.activity_type = a_df.activity_type.cat.remove_unused_categories()
+    a_df['month'] = a_df.date.dt.month
+    a_df['year'] = a_df.date.dt.year
+    g_df = a_df.groupby(['year', 'month', 'owner_age_group', 'pet_type'], observed=True).activity_type.value_counts().reset_index(name='counts')
+    ag_df = g_df.loc[(g_df.year == 2023) | (g_df.month > 3)].groupby(['owner_age_group', 'pet_type', 'activity_type'], observed=True).counts.agg('mean').reset_index()
+    activities = ag_df.activity_type.unique()
+    fig, axes = plt.subplots(nrows=len(activities), figsize=(4,10));
+    for ax, activity in zip(axes, activities):
+        pag_df = ag_df.loc[ag_df.activity_type == activity].pivot(index='owner_age_group', columns='pet_type', values='counts')
+        sns.heatmap(pag_df, ax=ax)
+        ax.set_xlabel('')
+        ax.set_ylabel('')
+        ax.set_title(activity)
+    title = 'Monthly average activity count by owner age group and pet type'
+    plt.suptitle(title)
+    plt.tight_layout()
+    # plt.show()
+
+    # Reset palette
+    if palette and reset_palette:
+        sns.set_palette(orig_pal)
+
+    if save:
+        _save_figure(title)
+    
+    if return_df:
+        return ag_df

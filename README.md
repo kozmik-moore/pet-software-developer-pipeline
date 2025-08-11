@@ -46,10 +46,13 @@ This is a portfolio project created to demonstrate my proficiency in data cleani
     └── 📁products
         └── 📁images
             ├── Activity counts (non-health).jpg
+            ├── Average monthly activity counts by owner age group.jpg
+            ├── Average monthly activity counts by pet type.jpg
             ├── Distibution of health visits by pet type.jpg
             ├── Distibution of health visits for all pet types.jpg
             ├── Distribution of activity counts per month by pet type.jpg
             ├── Distribution of activity counts per month.jpg
+            ├── Monthly average activity count by owner age group and pet type.jpg
             ├── Pet counts by owner age group.jpg
             ├── Pet proportions by owner age group.jpg
             ├── Unique pet counts.jpg
