@@ -123,7 +123,7 @@ def health_activities_boxplots(data: pd.DataFrame, by_type: bool = False, save: 
         ax = sns.boxplot(issue_counts, x='issue', y='counts', hue='issue')
         ax.set_xlabel('')
         ax.set_ylabel('')
-        title = 'Distibution of health visits for all pet types'
+        title = 'Distribution of health visits for all pet types'
         plt.suptitle(title)
     else:
         issue_counts = hda_df.groupby(['year', 'month', 'pet_type'], observed=True).issue.value_counts().reset_index(name='counts')
@@ -137,7 +137,7 @@ def health_activities_boxplots(data: pd.DataFrame, by_type: bool = False, save: 
         g.tight_layout()
         g.set(xticks=[])
         g.figure.subplots_adjust(top=0.8)  # makes room for title
-        title = 'Distibution of health visits by pet type'
+        title = 'Distribution of health visits by pet type'
         g.figure.suptitle(title)
     if save:
         _save_figure(title)
