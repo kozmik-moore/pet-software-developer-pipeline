@@ -17,7 +17,7 @@ def _save_figure(title: str, location: str|Path = products.images, set_bbox_inch
     """
     if isinstance(location, str):
         location = Path(location)
-    plt.savefig(location / f'{title}.{figtype}', bbox_inches='tight' if set_bbox_inches else None)
+    plt.savefig(location / f'{title}.{figtype}'.replace(': ', ' - '), bbox_inches='tight' if set_bbox_inches else None)
 
 def activities_countplots(data: pd.DataFrame, save: bool = False, palette: str|None = None, return_df: bool = False):
     """Creates a barplot of the record counts for each activity that is not a health activity.
@@ -201,7 +201,7 @@ def pet_counts_by_owner_age(data: pd.DataFrame, proportions: bool = False, save:
     
 
 def activities_heatmaps(
-        df: pd.DataFrame, 
+        data: pd.DataFrame, 
         category: str = 'owners', 
         save: bool = False, 
         palette: str|None = None, 
@@ -221,7 +221,7 @@ def activities_heatmaps(
     }[category]
 
     # Sort data by year and month
-    a_df = df.loc[df.activity_type != 'Health', ['date', c_type, 'activity_type']].copy()
+    a_df = data.loc[data.activity_type != 'Health', ['date', c_type, 'activity_type']].copy()
     a_df.activity_type = a_df.activity_type.cat.remove_unused_categories()
     a_df['month'] = a_df.date.dt.month
     a_df['year'] = a_df.date.dt.year
@@ -250,12 +250,12 @@ def activities_heatmaps(
         return ag_df
     
 
-def activities_heatmaps_owners_pets(df: pd.DataFrame, save: bool = False, palette: str|None = None, reset_palette: bool = True, return_df: bool = False):
+def activities_heatmaps_owners_pets(data: pd.DataFrame, save: bool = False, palette: str|None = None, reset_palette: bool = True, return_df: bool = False):
     if palette:
         if reset_palette:
             orig_pal = sns.color_palette()
         sns.set_palette(palette)
-    a_df = df.loc[df.activity_type != 'Health', ['date', 'owner_age_group', 'pet_type', 'activity_type']].copy()
+    a_df = data.loc[data.activity_type != 'Health', ['date', 'owner_age_group', 'pet_type', 'activity_type']].copy()
     a_df.activity_type = a_df.activity_type.cat.remove_unused_categories()
     a_df['month'] = a_df.date.dt.month
     a_df['year'] = a_df.date.dt.year
@@ -283,3 +283,95 @@ def activities_heatmaps_owners_pets(df: pd.DataFrame, save: bool = False, palett
     
     if return_df:
         return ag_df
+    
+def health_activities_elapsed_time_distributions(
+        data: pd.DataFrame, 
+        save: bool = False, 
+        category: str = 'Annual Checkup', 
+        group_by: str = 'pet type', 
+        plot_type: str = 'box',
+        palette: list[str]|str|None = None, 
+        reset_palette: bool = True,
+        return_df: bool = False):
+    """Plots the distribution of time elapsed between health visits.
+
+    Args:
+        data (pandas.DataFrame): the supplied dataframe.
+        save (bool, optional): whether to save the created image to the `images` folder. Defaults to False.
+        category (str, optional): which 'health visit' type to visualize: select from 'annual checkup', 'ear infection', 'dental cleaning', 'injury'. Defaults to 'annual checkup'.
+        group_by (str, optional): which grouping to visualize: select from 'pet type', 'owner ages' or 'both'. Defaults to 'pet type'.
+        plot_type (str, optional): which distribution plot to use: select from 'box' or 'violin'. Defaults to 'box'.
+        palette (list[str] | str | None, optional): which Seaborn color palette(s) to use. Defaults to None.
+        reset_palette (bool, optional): whether to reset the color palette after calling this function. Defaults to True.
+        return_df (bool, optional): whether to return the dataframe used to create this visualization. Defaults to False.
+
+    Raises:
+        ValueError: if `palette` is not of type `str` or `list` of length 1 or 2
+
+    Returns:
+        None|pandas.DataFrame: optionally returns the dataframe used to create this visual
+    """
+    
+    # Set palette
+    palettes = [sns.color_palette(), sns.color_palette()]
+    if palette:
+        if reset_palette:
+            orig_pal = sns.color_palette()
+        if isinstance(palette, str):
+            palettes = [palette, palette]
+        elif isinstance(palette, list):
+            if len(palette) > 2 or len(palette) == 0:
+                raise ValueError('`palette` should be a string or a list of length 1 or 2')
+            elif len(palette) == 1:
+                palettes = [palette[0], palette[0]]
+            else:
+                palettes = palette
+        else:
+            raise ValueError('`palette` should be a string or a list of length 1 or 2')
+
+
+    # Determine which grouping type to plot
+    group_type = {
+        'pet type': ['pet_type'],
+        'owner ages': ['owner_age_group'],
+        'both': ['owner_age_group', 'pet_type']
+    }[group_by]
+
+    plot_func = {
+        'box': sns.boxplot,
+        'violin': sns.violinplot
+    }[plot_type]
+
+    visit_type = category.title()
+
+    # Order data to calculate average time between events
+    filtered_df = data.loc[data.issue == visit_type]
+    diffs = filtered_df.groupby(['pet_id']).date.diff()
+    revisit_index = diffs.loc[~diffs.isna()].index
+    revisits = filtered_df.loc[filtered_df.index.isin(revisit_index), group_type]
+    revisits = revisits.merge(diffs.reset_index(name='elapsed_time').set_index('index'), how='left', left_index=True, right_index=True)
+    revisits.elapsed_time = revisits.elapsed_time.dt.days
+
+    # Plot and display
+    fig, axes = plt.subplots(nrows=len(group_type), squeeze=False, figsize=(8,7 if group_by == 'both' else 4))
+    label_axes_palettes = zip(group_type, axes[:, 0], palettes)
+    for l, a, p in label_axes_palettes:
+        sns.set_palette(p)
+        plot_func(revisits, x='elapsed_time', y=l, orient='h', hue=l, ax=a)
+        a.set_xlabel('')
+        a.set_ylabel('')
+        a.set_title(f'By {l.replace("_", " ")}')
+    title = f'Distribution of time between health visits: {visit_type}'
+    plt.suptitle(title)
+    plt.tight_layout()
+    if save:
+        subtitle = ', '.join([x.replace('_', ' ')  for x in group_type])
+        full_title = f'{title} ({subtitle})'
+        _save_figure(full_title)
+    plt.show()
+
+    if palette and reset_palette:
+        sns.set_palette(orig_pal)
+
+    if return_df:
+        return revisits
