@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from utilities.processes import all_pet_data
 from utilities.config import products
 from pathlib import Path
+from utilities.features import add_dt_column
 
 def _save_figure(title: str, location: str|Path = products.images, set_bbox_inches: bool = True, figtype: str = 'jpg'):
     """Saves the currently active figure with the supplied title and location
@@ -66,8 +67,8 @@ def activities_boxplots(data: pd.DataFrame, by_type: bool = False, save: bool = 
     a_df.activity_type = a_df.activity_type.cat.remove_unused_categories()
 
     # Group data and count number of each activity per month
-    a_df['month'] = a_df.date.dt.month
-    a_df['year'] = a_df.date.dt.year
+    a_df = add_dt_column(a_df)
+    a_df = add_dt_column(a_df, 'month')
     
     # Visualize
     if by_type:
