@@ -123,7 +123,7 @@ def health_activities_boxplots(data: pd.DataFrame, by_type: bool = False, save: 
         ax = sns.boxplot(issue_counts, x='issue', y='counts', hue='issue')
         ax.set_xlabel('')
         ax.set_ylabel('')
-        title = 'Distribution of health visits for all pet types'
+        title = 'Distribution of monthly health visits for all pet types'
         plt.suptitle(title)
     else:
         issue_counts = hda_df.groupby(['year', 'month', 'pet_type'], observed=True).issue.value_counts().reset_index(name='counts')
@@ -137,7 +137,7 @@ def health_activities_boxplots(data: pd.DataFrame, by_type: bool = False, save: 
         g.tight_layout()
         g.set(xticks=[])
         g.figure.subplots_adjust(top=0.8)  # makes room for title
-        title = 'Distribution of health visits by pet type'
+        title = 'Distribution of monthly health visits by pet type'
         g.figure.suptitle(title)
     if save:
         _save_figure(title)
@@ -284,21 +284,25 @@ def activities_heatmaps_owners_pets(data: pd.DataFrame, save: bool = False, pale
     if return_df:
         return ag_df
     
-def health_activities_elapsed_time_distributions(
+def activities_elapsed_time_distributions(
         data: pd.DataFrame, 
         save: bool = False, 
-        category: str = 'Annual Checkup', 
+        activity: str = 'health',
+        health_activity: str = 'annual checkup', 
         group_by: str = 'pet type', 
         plot_type: str = 'box',
         palette: list[str]|str|None = None, 
         reset_palette: bool = True,
         return_df: bool = False):
-    """Plots the distribution of time elapsed between health visits.
+    
+    """Plots the distribution of time elapsed between activties per pet.
+    Can be filtered by "activity type" and further filtered by "health visit type", if "health" is the activity.
 
     Args:
         data (pandas.DataFrame): the supplied dataframe.
         save (bool, optional): whether to save the created image to the `images` folder. Defaults to False.
-        category (str, optional): which 'health visit' type to visualize: select from 'annual checkup', 'ear infection', 'dental cleaning', 'injury'. Defaults to 'annual checkup'.
+        activity (str, optional): which activity type to focus on. Possible inputs include 'health', 'playing', 'resting', 'walking'. Defaults to 'health'.
+        health_activity (str, optional): which 'health visit' type to visualize: select from 'annual checkup', 'ear infection', 'dental cleaning', 'injury'. Defaults to 'annual checkup'.
         group_by (str, optional): which grouping to visualize: select from 'pet type', 'owner ages' or 'both'. Defaults to 'pet type'.
         plot_type (str, optional): which distribution plot to use: select from 'box' or 'violin'. Defaults to 'box'.
         palette (list[str] | str | None, optional): which Seaborn color palette(s) to use. Defaults to None.
@@ -309,7 +313,7 @@ def health_activities_elapsed_time_distributions(
         ValueError: if `palette` is not of type `str` or `list` of length 1 or 2
 
     Returns:
-        None|pandas.DataFrame: optionally returns the dataframe used to create this visual
+        pandas.DataFrame|None: optionally returns the dataframe used to create this visual
     """
     
     # Set palette
@@ -342,10 +346,21 @@ def health_activities_elapsed_time_distributions(
         'violin': sns.violinplot
     }[plot_type]
 
-    visit_type = category.title()
+    visit_type = health_activity.title()
+    activity_type = activity.capitalize()
 
-    # Order data to calculate average time between events
-    filtered_df = data.loc[data.issue == visit_type]
+    # Calculate average time between events and determine title variables
+    conditions = data.activity_type == activity_type
+    title = f'Distribution of time between '
+    if activity == 'health':
+        conditions = conditions & (data.issue == visit_type)
+        subtitle = ', '.join([x.replace('_', ' ')  for x in group_type])
+        title += f'health visits: {visit_type}'
+        file_title = f'{title} ({subtitle})'
+    else:
+        title += f'activities: {activity_type}'
+        file_title = title
+    filtered_df = data.loc[conditions]
     diffs = filtered_df.groupby(['pet_id']).date.diff()
     revisit_index = diffs.loc[~diffs.isna()].index
     revisits = filtered_df.loc[filtered_df.index.isin(revisit_index), group_type]
@@ -361,13 +376,10 @@ def health_activities_elapsed_time_distributions(
         a.set_xlabel('')
         a.set_ylabel('')
         a.set_title(f'By {l.replace("_", " ")}')
-    title = f'Distribution of time between health visits: {visit_type}'
     plt.suptitle(title)
     plt.tight_layout()
     if save:
-        subtitle = ', '.join([x.replace('_', ' ')  for x in group_type])
-        full_title = f'{title} ({subtitle})'
-        _save_figure(full_title)
+        _save_figure(file_title)
     plt.show()
 
     if palette and reset_palette:

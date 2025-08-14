@@ -42,6 +42,7 @@ This is a portfolio project created to demonstrate my proficiency in data cleani
         ├── cleaned.csv
         ├── pet_activities.csv
         ├── pet_health.csv
+        ├── temp.csv
         ├── users.csv
     └── 📁products
         └── 📁images
@@ -52,6 +53,8 @@ This is a portfolio project created to demonstrate my proficiency in data cleani
             ├── Distribution of activity counts per month.jpg
             ├── Distribution of health visits by pet type.jpg
             ├── Distribution of health visits for all pet types.jpg
+            ├── Distribution of monthly health visits by pet type.jpg
+            ├── Distribution of monthly health visits for all pet types.jpg
             ├── Distribution of time between health visits - Annual Checkup (owner age group, pet type).jpg
             ├── Monthly average activity count by owner age group and pet type.jpg
             ├── Pet counts by owner age group.jpg
