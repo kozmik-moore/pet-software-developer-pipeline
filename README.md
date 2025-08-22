@@ -35,6 +35,7 @@ This is a portfolio project created to demonstrate my proficiency in data cleani
         └── 📁utilities
             ├── __init__.py
             ├── config.py
+            ├── features.py
             ├── processes.py
             ├── visuals.py
         ├── notebook.ipynb
@@ -42,7 +43,6 @@ This is a portfolio project created to demonstrate my proficiency in data cleani
         ├── cleaned.csv
         ├── pet_activities.csv
         ├── pet_health.csv
-        ├── temp.csv
         ├── users.csv
     └── 📁products
         └── 📁images

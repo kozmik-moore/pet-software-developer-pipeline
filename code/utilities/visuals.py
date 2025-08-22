@@ -74,7 +74,7 @@ def activities_boxplots(data: pd.DataFrame, by_type: bool = False, save: bool = 
     if by_type:
         title = 'Distribution of activity counts per month by pet type'
         g_df = a_df.groupby(['year', 'month', 'pet_type'], observed=True).activity_type.value_counts().reset_index(name='counts')
-        g_df = g_df.loc[(g_df.year == 2023) | (g_df.month > 3)].reset_index(drop=True)
+        g_df = g_df.loc[(g_df.year >= 2023) | (g_df.month > 3)].reset_index(drop=True)
         g = sns.FacetGrid(g_df, col='pet_type', hue='activity_type')
         g.map(sns.boxplot, 'activity_type', 'counts', order=sorted(g_df.activity_type.unique()), width=0.7)
         g.set_axis_labels(x_var='', y_var='')
@@ -86,7 +86,7 @@ def activities_boxplots(data: pd.DataFrame, by_type: bool = False, save: bool = 
     else:
         title = 'Distribution of activity counts per month'
         g_df = a_df.groupby(['year', 'month']).activity_type.value_counts().reset_index(name='counts')
-        g_df = g_df.loc[(g_df.year == 2023) | (g_df.month > 3)].reset_index(drop=True)
+        g_df = g_df.loc[(g_df.year >= 2023) | (g_df.month > 3)].reset_index(drop=True)
         ax = sns.boxplot(g_df, x='activity_type', y='counts', hue='activity_type')
         ax.set_xlabel('')
         ax.set_ylabel('')
@@ -229,7 +229,7 @@ def activities_heatmaps(
 
     # Get average monthly activity counts
     g_df = a_df.groupby(['year', 'month', c_type], observed=True).activity_type.value_counts().reset_index(name='counts')
-    ag_df = g_df.loc[(g_df.year == 2023) | (g_df.month > 3)].groupby([c_type, 'activity_type'], observed=True).counts.agg('mean').reset_index(name='means')
+    ag_df = g_df.loc[(g_df.year >= 2023) | (g_df.month > 3)].groupby([c_type, 'activity_type'], observed=True).counts.agg('mean').reset_index(name='means')
 
     # Prepare for visualization and create heatmap
     title = f'Average monthly activity counts by {c_type.replace("_", " ")}'
@@ -261,7 +261,7 @@ def activities_heatmaps_owners_pets(data: pd.DataFrame, save: bool = False, pale
     a_df['month'] = a_df.date.dt.month
     a_df['year'] = a_df.date.dt.year
     g_df = a_df.groupby(['year', 'month', 'owner_age_group', 'pet_type'], observed=True).activity_type.value_counts().reset_index(name='counts')
-    ag_df = g_df.loc[(g_df.year == 2023) | (g_df.month > 3)].groupby(['owner_age_group', 'pet_type', 'activity_type'], observed=True).counts.agg('mean').reset_index()
+    ag_df = g_df.loc[(g_df.year >= 2023) | (g_df.month > 3)].groupby(['owner_age_group', 'pet_type', 'activity_type'], observed=True).counts.agg('mean').reset_index()
     activities = ag_df.activity_type.unique()
     fig, axes = plt.subplots(nrows=len(activities), figsize=(4,10));
     for ax, activity in zip(axes, activities):
@@ -388,3 +388,87 @@ def activities_elapsed_time_distributions(
 
     if return_df:
         return revisits
+    
+
+def activities_time_series(
+        df: pd.DataFrame, 
+        activity: str = 'health', 
+        health_activity: str = '', 
+        group_by: str = 'pet type', 
+        save: bool = False, 
+        palette: str|None = None, 
+        reset_palette: bool = True, 
+        return_df: bool = False):
+    """Plots the average count of a given activity per month.
+    Can optionally group by pet type or owner age
+
+    Args:
+        df (pd.DataFrame): the cleaned dataframe
+        activity (str, optional): the activity to plot. Defaults to 'health'; select one of 'health', 'playing' 'resting', 'walking'.
+        health_activity (str, optional): the health activity to plot, if 'health' is the selected activity; select one of 'annual checkup', 'dental cleaning', 'ear infection' , 'injury'.
+        group_by (str, optional): the grouping to use; select one of 'pet type' or 'owner ages'. Defaults to 'pet type'.
+        save (bool, optional): whether to save the generated plot to the images directory. Defaults to False.
+        palette (str | None, optional): a Seaborn palette to apply to the plot. Defaults to None.
+        reset_palette (bool, optional): whether to restore the original palette after this function runs. Defaults to True.
+        return_df (bool, optional): whether to return the dataframe that was created to generate the plot. Defaults to False.
+
+    Returns:
+        pandas.DataFrame | None: if desired, returns the dataframe used to create the plot
+    """
+    
+    # Set palette
+    if palette:
+        if reset_palette:
+            orig_pal = sns.color_palette()
+        sns.set_palette(palette)
+
+    # Determine which grouping type to plot
+    group_type = {
+        'pet type': ['pet_type'],
+        'owner ages': ['owner_age_group'],
+        'both': ['owner_age_group', 'pet_type']
+    }[group_by]
+    title_tokens = [x.replace('_', ' ') for x in group_type]
+
+    visit_type = health_activity.title()
+    activity_type = activity.capitalize()
+
+    # Calculate monthly average for given conditions
+    conditions = df.activity_type == activity_type
+    counter = 'activity_type'
+    title = f'Average activity counts for "{activity}" over time'
+    if activity == 'health' and health_activity:
+        conditions = conditions & (df.issue == visit_type)
+        counter = 'issue'
+        title = title.replace(activity, health_activity)
+    else:
+        pass
+    title += f' ({", ".join(title_tokens)})'
+    tdf = df.loc[conditions].copy()
+    tdf = add_dt_column(tdf)
+    tdf = add_dt_column(tdf, 'month')
+    gtdf = tdf.groupby(['year', 'month'] + group_type, observed=False)[counter].value_counts().reset_index(name='counts')
+
+    # Filter out unneeded months and value counts
+    gtdf = gtdf.loc[(gtdf.year >= 2023) | (gtdf.month > 3)]
+    gtdf = gtdf.loc[gtdf[counter] == (activity_type if counter == 'activity_type' else visit_type)]
+    fgtdf = gtdf.copy()
+
+    # Plot time series
+    fgtdf['date'] = pd.to_datetime(fgtdf.year.astype(str) + '-' + fgtdf.month.astype(str))
+    fig, ax = plt.subplots(figsize=(10,3))
+    sns.lineplot(fgtdf, x='date', y='counts', ax=ax)
+    ax.set_xlabel('')
+    ax.set_ylabel('Count')
+    plt.title(title)
+    plt.xticks(rotation=30)
+
+    if save:
+        plt.savefig(products.images / f'{title}.csv')
+    plt.show()
+
+    if palette and reset_palette:
+        sns.set_palette(orig_pal)
+
+    if return_df:
+        return gtdf
