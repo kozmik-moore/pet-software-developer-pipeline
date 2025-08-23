@@ -395,18 +395,20 @@ def activities_time_series(
         activity: str = 'health', 
         health_activity: str = '', 
         group_by: str = 'pet type', 
+        explode: bool = False, 
         save: bool = False, 
         palette: str|None = None, 
         reset_palette: bool = True, 
         return_df: bool = False):
     """Plots the average count of a given activity per month.
-    Can optionally group by pet type or owner age
+    Can optionally group by pet type or owner age individually or bot in a FacetGrid
 
     Args:
         df (pd.DataFrame): the cleaned dataframe
         activity (str, optional): the activity to plot. Defaults to 'health'; select one of 'health', 'playing' 'resting', 'walking'.
         health_activity (str, optional): the health activity to plot, if 'health' is the selected activity; select one of 'annual checkup', 'dental cleaning', 'ear infection' , 'injury'.
         group_by (str, optional): the grouping to use; select one of 'pet type' or 'owner ages'. Defaults to 'pet type'.
+        explode (bool, optional): whether to create a plot for each combination of pet type and owner age group. Defaults to False.
         save (bool, optional): whether to save the generated plot to the images directory. Defaults to False.
         palette (str | None, optional): a Seaborn palette to apply to the plot. Defaults to None.
         reset_palette (bool, optional): whether to restore the original palette after this function runs. Defaults to True.
@@ -421,6 +423,11 @@ def activities_time_series(
         if reset_palette:
             orig_pal = sns.color_palette()
         sns.set_palette(palette)
+
+    # Set variables for FacetGrid, if necessary
+    if explode:
+        group_by = 'both'
+        health_activity = ''
 
     # Determine which grouping type to plot
     group_type = {
@@ -456,12 +463,22 @@ def activities_time_series(
 
     # Plot time series
     fgtdf['date'] = pd.to_datetime(fgtdf.year.astype(str) + '-' + fgtdf.month.astype(str))
-    fig, ax = plt.subplots(figsize=(10,3))
-    sns.lineplot(fgtdf, x='date', y='counts', ax=ax)
-    ax.set_xlabel('')
-    ax.set_ylabel('Count')
-    plt.title(title)
-    plt.xticks(rotation=30)
+    if explode:
+        g = sns.FacetGrid(fgtdf, col='pet_type', row='owner_age_group', margin_titles=True)
+        g.map(sns.lineplot, 'date', 'counts', 'pet_type')
+        g.set(ylabel='', xlabel='')
+        g.tick_params(axis='x', rotation=60)
+        g.set_titles(col_template='pet = {col_name}', row_template='age group = {row_name}')
+        g.figure.subplots_adjust(top=0.95)
+        g.figure.suptitle(title)
+        # plt.tight_layout()
+    else:
+        fig, ax = plt.subplots(figsize=(10,3))
+        sns.lineplot(fgtdf, x='date', y='counts', ax=ax)
+        ax.set_xlabel('')
+        ax.set_ylabel('Count')
+        plt.xticks(rotation=30)
+        plt.title(title)
 
     if save:
         plt.savefig(products.images / f'{title}.csv')
