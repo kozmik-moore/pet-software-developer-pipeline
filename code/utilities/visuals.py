@@ -164,13 +164,18 @@ def pet_counts(data: pd.DataFrame, save: bool = False, palette: str|None = None,
         return pet_counts
 
 def pet_counts_by_owner_age(data: pd.DataFrame, proportions: bool = False, save: bool = False, palette: str|None = None, return_df: bool = False):
-    """_summary_
+    """Generate a plot counting the number of each type of pet.
+    Can generate a plot of absolute counts or proportional counts.
 
     Args:
-        data (pd.DataFrame): _description_
-        proportions (bool, optional): _description_. Defaults to False.
-        save (bool, optional): _description_. Defaults to False.
-        palette (str | None, optional): a Seaborn palette to set, if any. Defaults to None.
+        data (pd.DataFrame): The cleaned data
+        proportions (bool, optional): Whether to plot absolute counts or proportional counts. Defaults to False.
+        save (bool, optional): Whether to save the generated plot to the images folder. Defaults to False.
+        palette (str | None, optional): Which Seaborn color palette(s) to use, if any. Defaults to None.
+        return_df (bool, optional): Whether to return the dataframe that generated this plot. Defaults to False.
+
+    Returns:
+        pandas.DataFrame | None: if desired, returns the dataframe used to create this plot
     """
     if palette:
         sns.set_palette(palette)
@@ -208,6 +213,20 @@ def activities_heatmaps(
         palette: str|None = None, 
         reset_palette: bool = True, 
         return_df: bool = False):
+    """Creates a heatmap of how often, on average, the app is used for logging non-health activities.
+    Similar to `activities_heatmaps_owner_pets`, but filters data based on owner age group or pet type rather than activity type.
+
+    Args:
+        data (pd.DataFrame): The cleaned data
+        category (str, optional): The categories to organize data; select from one of 'owners' or 'pets'. Defaults to 'owners'.
+        save (bool, optional): whether to save the created plot to the images folder. Defaults to False.
+        palette (str | None, optional): which Seaborn color palette to use. Defaults to None.
+        reset_palette (bool, optional): whether to revert the palette back after this function runs. Defaults to True.
+        return_df (bool, optional): whether to return the dataframe used to create this plot. Defaults to False.
+
+    Returns:
+        pandas.DataFrame | None: if desired, returns the dataframe used to create this plot
+    """
     
     # Store palette and change to desired palette
     if palette:
@@ -252,6 +271,19 @@ def activities_heatmaps(
     
 
 def activities_heatmaps_owners_pets(data: pd.DataFrame, save: bool = False, palette: str|None = None, reset_palette: bool = True, return_df: bool = False):
+    """Creates a heatmap of how often, on average, the app is used for logging each non-health activities.
+    Similar to `activities_heatmaps`, but filters data based on activity type rather than owner age group or pet type.
+
+    Args:
+        data (pd.DataFrame): The cleaned data
+        save (bool, optional): whether to save the created plot to the images folder. Defaults to False.
+        palette (str | None, optional): which Seaborn color palette to use. Defaults to None.
+        reset_palette (bool, optional): whether to revert the palette back after this function runs. Defaults to True.
+        return_df (bool, optional): whether to return the dataframe used to create this plot. Defaults to False.
+
+    Returns:
+        pandas.DataFrame | None: if desired, returns the dataframe used to create this plot
+    """
     if palette:
         if reset_palette:
             orig_pal = sns.color_palette()
