@@ -431,6 +431,8 @@ def activities_time_series(
         save: bool = False, 
         palette: str|None = None, 
         reset_palette: bool = True, 
+        height: float = 4.0,
+        aspect: float = 1.0,
         return_df: bool = False):
     """Plots the average count of a given activity per month.
     Can optionally group by pet type or owner age individually or bot in a FacetGrid
@@ -444,6 +446,8 @@ def activities_time_series(
         save (bool, optional): whether to save the generated plot to the images directory. Defaults to False.
         palette (str | None, optional): a Seaborn palette to apply to the plot. Defaults to None.
         reset_palette (bool, optional): whether to restore the original palette after this function runs. Defaults to True.
+        height (float, optional): the height of the plots in the Facetgrid. Defaults to 4.
+        aspect (float, optional): the aspect ratio of the plots in the Facetgrid. Defaults to 1.0.
         return_df (bool, optional): whether to return the dataframe that was created to generate the plot. Defaults to False.
 
     Returns:
@@ -496,7 +500,7 @@ def activities_time_series(
     # Plot time series
     fgtdf['date'] = pd.to_datetime(fgtdf.year.astype(str) + '-' + fgtdf.month.astype(str))
     if explode:
-        g = sns.FacetGrid(fgtdf, col='pet_type', row='owner_age_group', margin_titles=True)
+        g = sns.FacetGrid(fgtdf, col='pet_type', row='owner_age_group', margin_titles=True, height=height, aspect=aspect)
         g.map(sns.lineplot, 'date', 'counts', 'pet_type')
         g.set(ylabel='', xlabel='')
         g.tick_params(axis='x', rotation=60)
