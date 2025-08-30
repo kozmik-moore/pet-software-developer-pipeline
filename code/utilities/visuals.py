@@ -517,7 +517,7 @@ def activities_time_series(
         plt.title(title)
 
     if save:
-        plt.savefig(products.images / f'{title}.csv')
+        _save_figure(title)
     plt.show()
 
     if palette and reset_palette:
@@ -525,3 +525,125 @@ def activities_time_series(
 
     if return_df:
         return gtdf
+    
+def activities_duration_counts_grid(
+        df: pd.DataFrame, 
+        activities: str = 'all', 
+        bins: int = 10,
+        palette: str|None = None, 
+        reset_palette: bool = True, 
+        save: bool = False,
+        return_df: bool = False):
+    """Plots a grid of histograms which display the distribution of non-health activity durations.
+    Can filter by any combination of "playing", "walking", or "resting"
+
+    Args:
+        df (pd.DataFrame): the cleaned dataframe
+        activities (str, optional): which activities to filter for. Can be any combination of "playing", "walking", or "resting". Defaults to 'all'.
+        bins (int, optional): the number of bins to break the data into for the histograms. Defaults to 10.
+        palette (str | None, optional): a Seaborn palette to use. Defaults to None.
+        reset_palette (bool, optional): whether to reset the palette after the figure is plotted. Defaults to True.
+        save (bool, optional): whether to save the figure to the images folder. Defaults to False.
+        return_df (bool, optional): whether to return the dataframe that was used to create the plot. Defaults to False.
+
+    Returns:
+        pandas.DatFrame | None: if desired, the dataframe used to create the plot can be returned 
+    """
+    # Set palette
+    if palette:
+        if reset_palette:
+            orig_pal = sns.color_palette()
+        sns.set_palette(palette)
+
+    # Determine activities to plot
+    all_activities = ['playing', 'walking', 'resting']
+    if activities == 'all':
+        activity_set = all_activities
+    elif ',' in activities:
+        activity_set = activities.split(',')
+    else:
+        activity_set = [activities]
+    activity_set = [x.strip().lower() for x in activity_set if x.strip().lower() in all_activities]
+    if not activity_set:
+        activity_set = all_activities
+
+    # Set plot title
+    title = f'Activity duration counts ({", ".join(activity_set)})'
+
+    # Plot figure
+    filtered = df.loc[df.activity_type.str.lower().isin(activity_set)]
+    g = sns.FacetGrid(filtered, col='pet_type', row='owner_age_group', hue='pet_type', margin_titles=True)
+    g.map(sns.histplot, 'duration_minutes', bins=bins)
+    g.set(ylabel='', xlabel='')
+    g.set_titles(col_template='pet = {col_name}', row_template='age group = {row_name}')
+    g.figure.subplots_adjust(top=0.95)
+    g.figure.suptitle(title)
+
+    # Save figure
+    if save:
+        _save_figure(title)
+
+    plt.show()
+
+    # Reset palette
+    if palette and reset_palette:
+        sns.set_palette(orig_pal)
+
+    # Return dataframe
+    if return_df:
+        return filtered
+    
+def activities_duration_means_heatmap(
+        df: pd.DataFrame, 
+        activities: str = 'all', 
+        palette: str|None = None, 
+        reset_palette: bool = True, 
+        save: bool = False,
+        return_df: bool = False):
+    # Set palette
+    if palette:
+        if reset_palette:
+            orig_pal = sns.color_palette()
+        sns.set_palette(palette)
+
+    # Determine activities to plot
+    all_activities = ['playing', 'walking', 'resting']
+    if activities == 'all':
+        activity_set = all_activities
+    elif ',' in activities:
+        activity_set = activities.split(',')
+    else:
+        activity_set = [activities]
+    activity_set = [x.strip().lower() for x in activity_set if x.strip().lower() in all_activities]
+    if not activity_set:
+        activity_set = all_activities
+
+    # Set plot title
+    title = f'Activity duration ({", ".join(activity_set)})'
+
+    # Plot figure
+    filtered = df.loc[df.activity_type.str.lower().isin(activity_set)].copy()
+    filtered = add_dt_column(filtered)
+    filtered = add_dt_column(filtered, 'month')
+    filtered['year_month'] = pd.to_datetime(filtered.year.astype(str) + "-" + filtered.month.astype(str))
+    dur_means = filtered.groupby(['pet_type', 'owner_age_group'], observed=True).duration_minutes.agg('mean')
+    dur_means_df = dur_means.reset_index(name='means')
+    ax = sns.heatmap(dur_means_df.pivot(index='owner_age_group', columns='pet_type', values='means'))
+    ax.set_title(title)
+    ax.set_ylabel('')
+    ax.set_xlabel('')
+    plt.tight_layout()
+
+    # Save figure
+    if save:
+        _save_figure(title)
+
+    plt.show()
+
+    # Reset palette
+    if palette and reset_palette:
+        sns.set_palette(orig_pal)
+
+    # Return dataframe
+    if return_df:
+        return filtered
